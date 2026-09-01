@@ -1,6 +1,6 @@
 {
   "name": "bpc-busca-de-areas",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,10 +8,12 @@
     "start": "next start"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.0",
+    "ai": "^6.0.0",
     "cheerio": "^1.0.0",
+    "exceljs": "^4.4.0",
     "next": "^15.5.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "xlsx": "^0.18.5"
+    "react-dom": "^19.1.0"
   }
 }
