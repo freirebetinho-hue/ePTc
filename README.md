@@ -1,42 +1,63 @@
 # BPC Busca de Áreas — Inteligência Imobiliária
 
-Versão técnica **0.2** do agente de prospecção imobiliária, formação de áreas, potencial construtivo e renda/aluguel.
+Versão técnica **0.4** do agente de prospecção imobiliária, formação de áreas, potencial construtivo e renda/aluguel.
 
 ## Modos
 - **A** — Terreno/área para incorporação, inclusive composição de lotes.
 - **B** — Compra para renda, com NOI e cap rate líquido.
 - **C** — Busca de aluguel.
 
-## Implementado na v0.2
+## Arquitetura v0.4 — sem API
+O sistema não exige chave, conta de API ou serviço pago para executar.
+
+A pesquisa funciona em camadas:
+1. busca HTML pública (DuckDuckGo HTML; fallback Bing HTML);
+2. filtragem por domínio dos portais definidos no estudo;
+3. extração direta de páginas públicas;
+4. leitura de JSON-LD, `__NEXT_DATA__`, OpenGraph/metadados e texto visível;
+5. deduplicação canônica;
+6. entrada manual/importação quando uma fonte bloquear coleta automatizada.
+
+A aplicação não contorna login, CAPTCHA, paywall ou `robots.txt`. Uma fonte bloqueada permanece registrada como limitação e deve ser revisada manualmente.
+
+## Implementado
 - Briefing obrigatório e persistido no navegador.
-- Agente server-side com Vercel AI SDK `ToolLoopAgent` e busca web para pesquisa multiportal.
-- Estratégia 6 grandes + descoberta de 6 regionais por localização.
-- Registro explícito de fonte pesquisada, sem resultado, bloqueada ou com erro.
-- Base canônica de imóveis com origem, URL, data de consulta e `geo_precisao`.
-- Deduplicação por endereço, coordenadas (<20 m), área, testada, preço, código, foto-hash e similaridade textual.
+- Pesquisa multiportal sem API e sem chave externa.
+- Estratégia 6 grandes + descoberta de fontes regionais por localização quando a busca pública permitir.
+- Registro explícito de fonte pesquisada, sem resultado ou com erro/bloqueio.
+- Base canônica com origem, URL, data de consulta e `geo_precisao`.
+- Extração pública por JSON-LD, `__NEXT_DATA__`, metadados e HTML.
+- Deduplicação por endereço, coordenadas existentes, área, testada, preço, código, foto-hash e similaridade textual.
 - Histórico de origens e preços preservado nos merges fortes.
-- Geocodificação aproximada via OpenStreetMap/Nominatim, sem substituir dado oficial.
+- Sem API de geocodificação: o sistema não inventa coordenadas; gera link de Google Maps por URL e aceita latitude/longitude comprovadas manualmente.
 - Formação manual de grupos de lotes com contiguidade inicialmente `NAO_CONFIRMADO`.
 - Cálculo de potencial construtivo (AC, APV, VGV, OODC e custo/VGV).
 - Cálculo de yield bruto separado de cap rate líquido (NOI / preço).
-- Exportação `.xlsx` profissional via ExcelJS com filtros, congelamento de painéis, hyperlinks e formatos monetários.
+- Exportação `.xlsx` via ExcelJS.
 - CHECK FINAL alimentado pelo estado real do estudo.
-- Export/import JSON do estudo e persistência local.
+- Export/import JSON e persistência local.
+- Endpoint `/api/health` para diagnóstico do modo sem API.
 - CI de validação de build em `.github/workflows/ci.yml`.
 
 ## Compliance
 A aplicação não deve inventar imóvel, endereço, área, preço, coordenada, proprietário ou disponibilidade. Não contorna autenticação, CAPTCHA, paywall ou bloqueios. Dados de anúncio são declaratórios; no Modo A, zoneamento/CA e área do terreno dependem de confirmação em fonte oficial/documental antes de conclusão.
 
-## Limitações ainda abertas
-- Persistência multiusuário em banco Vercel ainda não foi provisionada; a v0.2 usa persistência local + export/import de estudo.
-- Fontes oficiais que exigem SQL/IPTU/matrícula específica continuam dependendo de consulta/documento por imóvel.
-- Alguns portais podem bloquear ou limitar a indexação; o agente registra a limitação e não simula pesquisa.
+## Limitações inerentes ao modo sem API
+- mecanismos de busca públicos podem limitar automação temporariamente;
+- alguns portais usam JavaScript pesado ou bloqueiam robôs;
+- resultados não indexados pelos buscadores precisam ser inseridos manualmente;
+- geocodificação automática foi removida para manter o sistema realmente sem API;
+- fontes oficiais que exigem SQL/IPTU/matrícula específica continuam dependendo de consulta/documento por imóvel.
 
 ## Rodar localmente
 ```bash
 npm install
-npm run dev
+npm run local
 ```
+
+Acesse `http://localhost:3000`.
+
+Diagnóstico: `http://localhost:3000/api/health`.
 
 ## Build
 ```bash
