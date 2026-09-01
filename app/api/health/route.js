@@ -1,35 +1,34 @@
-import { apiConfig } from '../../../lib/providers';
+import { runtimeConfig } from '../../../lib/providers';
 
 export const runtime = 'nodejs';
 
 export async function GET() {
-  const config = apiConfig();
-  const searchConfigured = config.brave || config.firecrawl;
+  const config = runtimeConfig();
   return Response.json({
     ok: true,
-    version: '0.3.0',
+    version: '0.4.0',
     runtime: 'nodejs',
+    mode: config.mode,
+    requires_api_key: false,
     services: {
       search: {
-        ok: searchConfigured,
-        status: searchConfigured ? 'configured' : 'optional_not_configured',
-        providers: { brave: config.brave, firecrawl: config.firecrawl },
-        message: searchConfigured ? 'Ao menos um provedor de busca está configurado.' : 'Configure BRAVE_SEARCH_API_KEY ou FIRECRAWL_API_KEY para pesquisa automática.',
+        ok: true,
+        provider: 'HTML público (DuckDuckGo/Bing)',
+        message: 'Sem chave. Resultados dependem da disponibilidade pública dos mecanismos de busca e dos portais.',
       },
       extraction: {
         ok: true,
-        firecrawl: config.firecrawl,
-        fallback: 'html_publico',
-        message: config.firecrawl ? 'Firecrawl ativo com fallback para HTML público.' : 'Firecrawl não configurado; HTML público será usado quando permitido.',
+        provider: 'HTML/JSON-LD público',
+        message: 'Sem chave. Respeita bloqueios, robots.txt e não contorna autenticação/CAPTCHA.',
       },
       geocoding: {
-        ok: config.googleGeocoding || config.nominatimFallback,
-        google: config.googleGeocoding,
-        nominatimFallback: config.nominatimFallback,
-        message: config.googleGeocoding ? 'Google Geocoding ativo.' : (config.nominatimFallback ? 'Google não configurado; Nominatim disponível como fallback.' : 'Nenhum geocodificador configurado.'),
+        ok: true,
+        provider: 'manual',
+        coordinates: false,
+        message: 'Sem API de geocodificação. O sistema gera link de Maps e mantém coordenadas como não confirmadas até entrada manual.',
       },
       export: { ok: true, provider: 'ExcelJS' },
-      localStorage: { ok: true, scope: 'browser' },
+      persistence: { ok: true, provider: 'localStorage + JSON', scope: 'browser' },
     },
     timestamp: new Date().toISOString(),
   });
